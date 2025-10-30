@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Campamento Padre & Hija 2025 - Longotoma</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7fafc; padding: 20px; }
+    .container { max-width: 700px; margin: auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #004085; }
+    .q { margin-bottom: 15px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+    .hidden { display: none; }
+    .actions { text-align: center; margin-top: 20px; }
+    button { padding: 10px 20px; font-size: 16px; background: #007bff; color: #fff; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+    button:hover { background: #0056b3; }
+    .results { margin-top: 30px; }
+    textarea { width: 100%; height: 200px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Campamento Padre & Hija 2025<br>Longotoma – Primavera</h1>
+    <form id="formCampamento">
+      <div class="q">
+        <label for="nombrePadre">1. Nombre del padre o responsable:</label>
+        <input type="text" id="nombrePadre" name="nombrePadre" required>
+      </div>
+
+      <div class="q">
+        <label for="nombreNina">2. Nombre de la niña:</label>
+        <input type="text" id="nombreNina" name="nombreNina" required>
+      </div>
+
+      <div class="q">
+        <label for="asistiras">3. ¿Asistirás al campamento padre & hija?</label>
+        <select id="asistiras" name="asistiras" required>
+          <option value="">Selecciona</option>
+          <option value="Sí">Sí</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div id="bloque2" class="q hidden">
+        <label for="prefFechas">4. ¿Preferís que el campamento sea:</label>
+        <select id="prefFechas" name="prefFechas">
+          <option value="">Selecciona</option>
+          <option value="Viernes a Domingo">De viernes a domingo</option>
+          <option value="Sábado a Domingo">De sábado a domingo</option>
+        </select>
+      </div>
+
+      <div id="bloque3" class="q hidden">
+        <label for="horaSalida">5. En caso de ser opción “viernes a domingo”, la salida será a las:</label>
+        <select id="horaSalida" name="horaSalida">
+          <option value="">Selecciona hora</option>
+          <option value="16:00">16:00</option>
+          <option value="20:00">20:00</option>
+        </select>
+      </div>
+
+      <div class="q">
+        <label for="tallaPolera">6. Todas las niñas que asistan recibirán polera del campamento. Seleccionar talla:</label>
+        <select id="tallaPolera" name="tallaPolera" required>
+          <option value="">Selecciona talla</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="LX">LX</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Enviar inscripción</button>
+        <button type="button" id="verResultados">Ver resultados</button>
+        <button type="button" id="descargar">Descargar datos</button>
+      </div>
+    </form>
+
+    <div id="resultados" class="results hidden">
+      <h3>Respuestas registradas:</h3>
+      <textarea id="datosGuardados" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    const asistirasEl = document.getElementById('asistiras');
+    const bloque2 = document.getElementById('bloque2');
+    const bloque3 = document.getElementById('bloque3');
+    const prefFechasEl = document.getElementById('prefFechas');
+    const resultadosDiv = document.getElementById('resultados');
+    const datosGuardados = document.getElementById('datosGuardados');
+
+    asistirasEl.addEventListener('change', () => {
+      if (asistirasEl.value === 'Sí') bloque2.classList.remove('hidden');
+      else { bloque2.classList.add('hidden'); bloque3.classList.add('hidden'); prefFechasEl.value = ''; document.getElementById('horaSalida').value = ''; }
+    });
+
+    prefFechasEl.addEventListener('change', () => {
+      if (prefFechasEl.value === 'Viernes a Domingo') bloque3.classList.remove('hidden');
+      else bloque3.classList.add('hidden');
+    });
+
+    document.getElementById('formCampamento').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(e.target));
+      const stored = JSON.parse(localStorage.getItem('inscripciones') || '[]');
+      stored.push(data);
+      localStorage.setItem('inscripciones', JSON.stringify(stored));
+      alert('Inscripción registrada correctamente ✅');
+      e.target.reset();
+      bloque2.classList.add('hidden');
+      bloque3.classList.add('hidden');
+    });
+
+    document.getElementById('verResultados').addEventListener('click', () => {
+      const stored = JSON.parse(localStorage.getItem('inscripciones') || '[]');
+      resultadosDiv.classList.remove('hidden');
+      datosGuardados.value = JSON.stringify(stored, null, 2);
+    });
+
+    document.getElementById('descargar').addEventListener('click', () => {
+      const stored = localStorage.getItem('inscripciones') || '[]';
+      const blob = new Blob([stored], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'inscripciones_campamento.json';
+      a.click();
+    });
+  </script>
+</body>
+</html>
