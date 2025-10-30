@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Campamento Padre & Hija 2025 – Primavera Longotoma</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+    .container { max-width: 700px; margin: auto; background: #fff; padding: 25px; border-radius: 10px; box-shadow: 0 3px 12px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #2b5797; }
+    h2 { color: #2b5797; margin-top: 40px; }
+    .q { margin-bottom: 15px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; }
+    input, select { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
+    .hidden { display: none; }
+    .actions { text-align: center; margin-top: 20px; }
+    button { padding: 10px 20px; background: #2b5797; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    button:hover { background: #1f3f72; }
+    .nav { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .nav button { background: #ddd; color: #333; }
+    .nav button.active { background: #2b5797; color: #fff; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ddd; padding: 8px; font-size: 13px; }
+    th { background: #f0f3f8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Campamento Padre & Hija 2025</h1>
+    <p style="text-align:center;">Primavera · Longotoma</p>
+
+    <div class="nav">
+      <button id="tabForm" class="active">📝 Formulario</button>
+      <button id="tabRespuestas">📊 Respuestas</button>
+    </div>
+
+    <!-- Formulario -->
+    <div id="formView">
+      <form id="formCampamento">
+        <div class="q">
+          <label>Nombre del Padre o Responsable:</label>
+          <input type="text" id="nombrePadre" name="nombrePadre" required />
+        </div>
+
+        <div class="q">
+          <label>Nombre de la Niña:</label>
+          <input type="text" id="nombreNina" name="nombreNina" required />
+        </div>
+
+        <div class="q">
+          <label>1. ¿Asistirás al campamento padre & hija?</label>
+          <select id="asistiras" name="asistiras" required>
+            <option value="">Selecciona</option>
+            <option value="Sí">Sí</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div id="bloque2" class="q hidden">
+          <label>2. ¿Preferís que el campamento sea?</label>
+          <select id="prefFechas" name="prefFechas">
+            <option value="">Selecciona</option>
+            <option value="Viernes a Domingo">De viernes a domingo</option>
+            <option value="Sábado a Domingo">De sábado a domingo</option>
+          </select>
+        </div>
+
+        <div id="bloque3" class="q hidden">
+          <label>3. En caso de ser opción “viernes a domingo”, la salida será a las:</label>
+          <select id="horaSalida" name="horaSalida">
+            <option value="">Selecciona hora</option>
+            <option value="16:00">16:00</option>
+            <option value="20:00">20:00</option>
+          </select>
+        </div>
+
+        <div class="q">
+          <label>4. Talla de polera para la niña:</label>
+          <select id="tallaPolera" name="tallaPolera" required>
+            <option value="">Selecciona talla</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="LX">LX</option>
+          </select>
+        </div>
+
+        <div class="actions">
+          <button type="submit">Enviar inscripción</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Resultados -->
+    <div id="resView" class="hidden">
+      <h2>📊 Respuestas registradas</h2>
+      <div id="responsesArea">No hay respuestas aún.</div>
+      <div class="actions">
+        <button id="downloadCSV">Descargar CSV</button>
+        <button id="clearAll" style="background:#c62828;">Borrar todo</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'campamento2025_respuestas';
+    const form = document.getElementById('formCampamento');
+    const asistirasEl = document.getElementById('asistiras');
+    const prefFechasEl = document.getElementById('prefFechas');
+    const bloque2 = document.getElementById('bloque2');
+    const bloque3 = document.getElementById('bloque3');
+    const responsesArea = document.getElementById('responsesArea');
+
+    function readData(){ return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    function saveData(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
+
+    function renderTable(){
+      const data = readData();
+      if(data.length === 0){ responsesArea.innerHTML = 'No hay respuestas aún.'; return; }
+      const keys = Object.keys(data[0]);
+      let html = '<table><thead><tr>' + keys.map(k=>`<th>${k}</th>`).join('') + '</tr></thead><tbody>';
+      for(const r of data){
+        html += '<tr>' + keys.map(k=>`<td>${r[k] || ''}</td>`).join('') + '</tr>';
+      }
+      html += '</tbody></table>';
+      responsesArea.innerHTML = html;
+    }
+
+    asistirasEl.addEventListener('change', ()=>{
+      if(asistirasEl.value === 'Sí') bloque2.classList.remove('hidden');
+      else { bloque2.classList.add('hidden'); bloque3.classList.add('hidden'); prefFechasEl.value=''; }
+    });
+    prefFechasEl.addEventListener('change', ()=>{
+      if(prefFechasEl.value === 'Viernes a Domingo') bloque3.classList.remove('hidden');
+      else bloque3.classList.add('hidden');
+    });
+
+    form.addEventListener('submit', e=>{
+      e.preventDefault();
+      const formData = new FormData(form);
+      const obj = Object.fromEntries(formData.entries());
+      obj.fecha_envio = new Date().toLocaleString();
+      const arr = readData();
+      arr.push(obj);
+      saveData(arr);
+      alert('✅ Inscripción enviada correctamente.');
+      form.reset();
+      bloque2.classList.add('hidden');
+      bloque3.classList.add('hidden');
+      renderTable();
+    });
+
+    document.getElementById('downloadCSV').addEventListener('click', ()=>{
+      const data = readData();
+      if(data.length === 0){ alert('No hay respuestas para descargar.'); return; }
+      const keys = Object.keys(data[0]);
+      const csv = [keys.join(',')].concat(data.map(r=>keys.map(k=>`"${(r[k]||'').replace(/"/g,'""')}"`).join(','))).join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'respuestas_campamento2025.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('clearAll').addEventListener('click', ()=>{
+      if(confirm('¿Borrar todas las respuestas guardadas en este navegador?')){
+        localStorage.removeItem(STORAGE_KEY);
+        renderTable();
+      }
+    });
+
+    // Tabs
+    const tabForm = document.getElementById('tabForm');
+    const tabRes = document.getElementById('tabRespuestas');
+    const formView = document.getElementById('formView');
+    const resView = document.getElementById('resView');
+    tabForm.addEventListener('click', ()=>{
+      tabForm.classList.add('active');
+      tabRes.classList.remove('active');
+      formView.classList.remove('hidden');
+      resView.classList.add('hidden');
+    });
+    tabRes.addEventListener('click', ()=>{
+      tabRes.classList.add('active');
+      tabForm.classList.remove('active');
+      resView.classList.remove('hidden');
+      formView.classList.add('hidden');
+      renderTable();
+    });
+  </script>
+</body>
+</html>
