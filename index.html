@@ -21,7 +21,7 @@
       padding: 2rem;
       border-radius: 16px;
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-      max-width: 500px;
+      max-width: 520px;
       width: 100%;
     }
     h2 {
@@ -44,104 +44,217 @@
     }
     button {
       width: 100%;
-      margin-top: 1.5rem;
+      margin-top: 1.1rem;
       background-color: #81C784;
       border: none;
       padding: 0.8rem;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       border-radius: 8px;
       color: #000;
       font-weight: bold;
       cursor: pointer;
-      transition: 0.3s;
+      transition: 0.18s;
     }
-    button:hover {
-      background-color: #66BB6A;
-      color: #fff;
-    }
+    .small-row { display:flex; gap:10px; }
+    .small-row button { flex:1; width:auto; }
     .results {
-      margin-top: 2rem;
-      background: rgba(255,255,255,0.1);
+      margin-top: 1.5rem;
+      background: rgba(255,255,255,0.08);
       padding: 1rem;
       border-radius: 10px;
       display: none;
+      color: #fff;
+      max-height: 250px;
+      overflow:auto;
     }
+    .note { font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.95; }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Campamento Padre & Hija 2025 - Longotoma 🌸</h2>
     <form id="campForm">
-      <label>Nombre del Padre o Responsable</label>
+      <label for="padre">Nombre del Padre o Responsable</label>
       <input type="text" id="padre" required>
-      <label>Nombre de la Niña</label>
+
+      <label for="nina">Nombre de la Niña</label>
       <input type="text" id="nina" required>
-      <label>¿Asistirás al campamento Padre & Hija?</label>
-      <select id="asistencia" onchange="togglePreguntas()">
+
+      <label for="asistencia">¿Asistirás al campamento Padre & Hija?</label>
+      <select id="asistencia" onchange="togglePreguntas()" required>
         <option value="">Seleccionar...</option>
         <option value="si">Sí</option>
         <option value="no">No</option>
       </select>
+
       <div id="preguntasExtra" style="display:none;">
-        <label>¿Prefieres que el campamento sea?</label>
+        <label for="dias">¿Prefieres que el campamento sea?</label>
         <select id="dias">
+          <option value="">Seleccionar...</option>
           <option value="viernes">De viernes a domingo</option>
           <option value="sabado">De sábado a domingo</option>
         </select>
-        <label>En caso de ser opción el viernes, salida:</label>
+
+        <label for="salida">En caso de ser opción el viernes, salida:</label>
         <select id="salida">
+          <option value="">Seleccionar...</option>
           <option value="16:00">16:00</option>
           <option value="20:00">20:00</option>
         </select>
-        <label>Talla de polera para la niña:</label>
+
+        <label for="talla">Talla de polera para la niña:</label>
         <select id="talla">
+          <option value="">Seleccionar...</option>
           <option value="S">S</option>
           <option value="M">M</option>
           <option value="L">L</option>
           <option value="XL">XL</option>
         </select>
       </div>
-      <button type="submit">Enviar Respuesta</button>
-      <button type="button" onclick="mostrarResultados()">Ver Resultados</button>
-      <button type="button" onclick="descargarDatos()">Descargar CSV</button>
+
+      <div class="small-row">
+        <button type="submit">Enviar Respuesta</button>
+      </div>
+
+      <div class="small-row" style="margin-top:8px;">
+        <button type="button" onclick="mostrarResultados()">Ver Resultados</button>
+        <button type="button" onclick="descargarDatos()">Descargar CSV</button>
+      </div>
+
+      <div class="note">Las respuestas se guardan en este navegador. Para centralizar, descarga el CSV y súbelo a Excel/Google Sheets.</div>
     </form>
+
     <div id="resultados" class="results"></div>
   </div>
+
   <script>
+    // lee/crea array persistente
+    const storageKey = 'campamento_datos';
+    function readDatos() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      } catch(e) { return []; }
+    }
+    function writeDatos(arr) {
+      localStorage.setItem(storageKey, JSON.stringify(arr));
+    }
+
     function togglePreguntas() {
       const asistencia = document.getElementById('asistencia').value;
-      document.getElementById('preguntasExtra').style.display = asistencia === 'si' ? 'block' : 'none';
+      document.getElementById('preguntasExtra').style.display = (asistencia === 'si') ? 'block' : 'none';
     }
-    const datos = JSON.parse(localStorage.getItem('campamento_datos') || '[]');
-    document.getElementById('campForm').addEventListener('submit', e => {
+
+    // manejar envío: si asistencia != 'si' se guardan campos vacíos
+    document.getElementById('campForm').addEventListener('submit', function(e) {
       e.preventDefault();
       const padre = document.getElementById('padre').value.trim();
       const nina = document.getElementById('nina').value.trim();
       const asistencia = document.getElementById('asistencia').value;
-      const dias = document.getElementById('dias')?.value || '';
-      const salida = document.getElementById('salida')?.value || '';
-      const talla = document.getElementById('talla')?.value || '';
-      datos.push({ padre, nina, asistencia, dias, salida, talla });
-      localStorage.setItem('campamento_datos', JSON.stringify(datos));
-      alert('¡Respuesta guardada con éxito!');
+      // Si no asiste, guardar campos vacíos
+      let dias = '';
+      let salida = '';
+      let talla = '';
+      if (asistencia === 'si') {
+        dias = document.getElementById('dias').value || '';
+        salida = document.getElementById('salida').value || '';
+        talla = document.getElementById('talla').value || '';
+      }
+      const row = {
+        padre: padre,
+        nina: nina,
+        asistencia: asistencia,
+        dias: dias,
+        salida: salida,
+        talla: talla,
+        fecha: new Date().toISOString()
+      };
+      const datos = readDatos();
+      datos.push(row);
+      writeDatos(datos);
+      // confirmación visual
+      const res = document.getElementById('resultados');
+      res.style.display = 'block';
+      res.innerHTML = '<div style="padding:8px;background:rgba(0,0,0,0.25);border-radius:8px;">✅ Respuesta guardada correctamente</div>';
+      // limpiar form
       document.getElementById('campForm').reset();
       document.getElementById('preguntasExtra').style.display = 'none';
+      setTimeout(()=>{ if (res.innerHTML.includes('Respuesta guardada')) res.style.display = 'none'; }, 1800);
     });
+
+    // Mostrar resultados legibles
     function mostrarResultados() {
+      const datos = readDatos();
       const cont = document.getElementById('resultados');
+      if (datos.length === 0) {
+        cont.style.display = 'block';
+        cont.innerHTML = '<div>No hay respuestas registradas.</div>';
+        return;
+      }
       cont.style.display = 'block';
-      cont.innerHTML = '<h3>Respuestas registradas:</h3>' + datos.map(d => 
-        `<p><b>${d.padre}</b> y <b>${d.nina}</b> - Asiste: ${d.asistencia}, ${d.dias}, Salida: ${d.salida}, Talla: ${d.talla}</p>`
-      ).join('');
+      cont.innerHTML = '<h3>Respuestas registradas (' + datos.length + ')</h3>' + datos.map((d, i) => {
+        // Si asistencia != 'si' mostrar vacíos para dias/salida/talla
+        const dias = d.asistencia === 'si' ? (d.dias || '-') : '';
+        const salida = d.asistencia === 'si' ? (d.salida || '-') : '';
+        const talla = d.asistencia === 'si' ? (d.talla || '-') : '';
+        const asistenciaLabel = (d.asistencia === 'si') ? 'Sí' : (d.asistencia === 'no' ? 'No' : '');
+        return `<div style="margin-bottom:10px;padding:8px;background:rgba(0,0,0,0.12);border-radius:6px;">
+          <b>${escapeHtml(d.padre)}</b> — <i>${escapeHtml(d.nina)}</i><br>
+          Asiste: ${escapeHtml(asistenciaLabel)}<br>
+          Días: ${escapeHtml(dias)} &nbsp; Salida: ${escapeHtml(salida)} &nbsp; Talla: ${escapeHtml(talla)}<br>
+          <small style="opacity:0.8">Enviado: ${new Date(d.fecha).toLocaleString()}</small>
+        </div>`;
+      }).join('');
     }
+
+    // Función para descargar CSV (con escapado correcto)
     function descargarDatos() {
-      const header = "Padre,Niña,Asistencia,Días,Salida,Talla\n";
-      const rows = datos.map(d => `${d.padre},${d.nina},${d.asistencia},${d.dias},${d.salida},${d.talla}`).join("\n");
-      const blob = new Blob([header + rows], { type: "text/csv" });
-      const a = document.createElement("a");
+      const datos = readDatos();
+      if (datos.length === 0) {
+        alert('No hay datos para descargar.');
+        return;
+      }
+      const headers = ['Padre','Niña','Asistencia','Días','Salida','Talla','Fecha'];
+      const escapeCell = s => {
+        if (s === null || s === undefined) return '';
+        const str = String(s);
+        // si contiene comillas, comas o saltos, escapar y encerrar en comillas
+        if (/[",\n\r]/.test(str)) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      };
+      const rows = datos.map(d => {
+        // asegurar que si no asiste, dias/salida/talla queden vacíos
+        const asistencia = d.asistencia === 'si' ? 'si' : 'no';
+        const dias = asistencia === 'si' ? (d.dias || '') : '';
+        const salida = asistencia === 'si' ? (d.salida || '') : '';
+        const talla = asistencia === 'si' ? (d.talla || '') : '';
+        return [
+          d.padre || '',
+          d.nina || '',
+          asistencia,
+          dias,
+          salida,
+          talla,
+          d.fecha || ''
+        ].map(escapeCell).join(',');
+      });
+      const csvContent = headers.join(',') + '\\n' + rows.join('\\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = "respuestas_campamento.csv";
+      a.download = 'respuestas_campamento.csv';
+      document.body.appendChild(a);
       a.click();
+      a.remove();
+    }
+
+    // helper para escapar HTML en la vista
+    function escapeHtml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/[&<>"']/g, function(m) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]);
+      });
     }
   </script>
 </body>
